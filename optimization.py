@@ -11,7 +11,7 @@ def production_scenario_table(
     
 ):
     records = []
-    n = int(input("oder quantity: "))10
+    n = int(input("oder quantity: "))
     n = int(round(n/spool_capacity,0))
     for white_spool_count in [i  for i in range(n, 0, -1)]:
         for black_spool_count in [i  for i in range(1, 0, -1)]:
