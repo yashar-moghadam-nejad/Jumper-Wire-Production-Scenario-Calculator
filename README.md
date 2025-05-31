@@ -1,6 +1,6 @@
-# Twinner Production Scenario Calculator
+# Jumper-Wire Production Scenario Calculator
 
-This Python script simulates different production scenarios for a cable manufacturing line involving an **extruder** and a **twinner**. Given a total production order (in meters), the script calculates:
+This Python script simulates different production scenarios for a Jumper Wire manufacturing line involving an **extruder** and a **twinner**. Given a total production order (in meters), the script calculates:
 
 - Twinner idle time based on spool color combinations (white/black)
 - Estimated PVC waste percentage due to color change
