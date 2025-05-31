@@ -11,7 +11,9 @@ def production_scenario_table(
     
 ):
     records = []
-    for white_spool_count in [i  for i in range(5, 0, -1)]:
+    n = int(input("oder quantity: "))10
+    n = int(round(n/spool_capacity,0))
+    for white_spool_count in [i  for i in range(n, 0, -1)]:
         for black_spool_count in [i  for i in range(1, 0, -1)]:
             white_minutes = int(((white_spool_count * spool_capacity)/extruder_rate)*60)
             black_minutes = int(((black_spool_count * spool_capacity)/extruder_rate)*60)
@@ -32,7 +34,7 @@ def production_scenario_table(
                 'White spool count': white_spool_count,
                 'Black spool count': black_spool_count,
                 'Twinner working time ': twinner_time,
-                'Twinner Idle (min)': waiting_time,
+                'Twinner Idle ': waiting_time,
                 'PVC Waste (%)': round(waste_percent, 2)
             })
 
