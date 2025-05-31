@@ -19,24 +19,24 @@ def optimize_production(
             usable_length = min(white_length, black_length)
             twinner_needed_hours = usable_length / twinner_rate
 
-            color_changes = 1 if white_hours == 0 or black_hours == 0 else 2
+            color_changes = 1
             total_waste = color_changes * color_change_waste
 
             total_length = white_length + black_length
-            total_pvc = total_length * pvc_per_meter
+            total_pvc = (total_length * pvc_per_meter) + total_waste
             waste_percent = (total_waste / total_pvc) * 100
 
             if waste_percent <= max_waste_percent:
-                waiting_time = total_hours - twinner_needed_hours
+                waiting_time = (total_hours*60) + color_change_time
                 result = {
                     'white_minutes': int(white_hours * 60),
                     'black_minutes': int(black_hours * 60),
                     'twinner_minutes': int(twinner_needed_hours * 60),
-                    'waiting_minutes': int(waiting_time * 60),
+                    'waiting_minutes': int(waiting_time),
                     'waste_percent': round(waste_percent, 2)
                 }
 
-                if best_result is None or waiting_time < best_result['waiting_minutes'] / 60:
+                if best_result is None or waiting_time < best_result['waiting_minutes']:
                     best_result = result
 
     return best_result
