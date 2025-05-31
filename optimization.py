@@ -1,52 +1,51 @@
-def optimize_production(
-    extruder_rate=10000,         # meters per hour
-    twinner_rate=5000,           # meters of twisted pair per hour
-    spool_capacity=20000,        # spool max capacity in meters
-    color_change_time=10,        # minutes
-    color_change_waste=1000,     # grams of PVC waste per color change
-    max_waste_percent=10,        # maximum allowed PVC waste percentage
-    pvc_per_meter=3              # grams of PVC per meter
-):
-    best_result = None
+import pandas as pd
 
-    # Brute-force: check possible production times from 0.1h to 10h
-    for white_hours in [i * 0.1 for i in range(1, 100)]:
-        for black_hours in [i * 0.1 for i in range(1, 100)]:
-            total_hours = white_hours + black_hours
+def production_scenario_table(
+    extruder_rate=10000,
+    twinner_rate=5000,
+    spool_capacity=20000,
+    color_change_time=10,
+    color_change_waste=1000,
+    max_waste_percent=10,
+    pvc_per_meter=3
+):
+    records = []
+
+    # Iterate from 10h down to 0.1h in 0.1h steps
+    for white_hours in [i * 0.1 for i in range(100, 0, -1)]:
+        for black_hours in [i * 0.1 for i in range(100, 0, -1)]:
+            white_minutes = int(white_hours * 60)
+            black_minutes = int(black_hours * 60)
+            total_extruder_minutes = white_minutes + color_change_time + black_minutes
+
             white_length = white_hours * extruder_rate
             black_length = black_hours * extruder_rate
-
             usable_length = min(white_length, black_length)
-            twinner_needed_hours = usable_length / twinner_rate
+            twinner_minutes = int((usable_length / twinner_rate) * 60)
 
-            color_changes = 1
+            color_changes = 1 if white_hours == 0 or black_hours == 0 else 2
             total_waste = color_changes * color_change_waste
-
-            total_length = white_length + black_length
-            total_pvc = (total_length * pvc_per_meter) + total_waste
+            total_pvc = (white_length + black_length) * pvc_per_meter + total_waste
             waste_percent = (total_waste / total_pvc) * 100
 
-            if waste_percent <= max_waste_percent:
-                waiting_time = (total_hours*60) + color_change_time
-                result = {
-                    'white_minutes': int(white_hours * 60),
-                    'black_minutes': int(black_hours * 60),
-                    'twinner_minutes': int(twinner_needed_hours * 60),
-                    'waiting_minutes': int(waiting_time),
-                    'waste_percent': round(waste_percent, 2)
-                }
+            # Calculate twinner waiting time accurately
+            twinner_start = white_minutes + color_change_time + black_minutes
+            extruder_end = total_extruder_minutes
+            waiting_time = max(0, twinner_start - extruder_end)
 
-                if best_result is None or waiting_time < best_result['waiting_minutes']:
-                    best_result = result
+            records.append({
+                'White (min)': white_minutes,
+                'Black (min)': black_minutes,
+                'Twinner (min)': twinner_minutes,
+                'Twinner Idle (min)': waiting_time,
+                'PVC Waste (%)': round(waste_percent, 2)
+            })
 
-    return best_result
+    df = pd.DataFrame(records)
+    return df
 
+# Usage example
+df = production_scenario_table()
+print(df.head())
+df.to_excel('production_scenarios.xlsx', index=False)
 
-# Example run
-result = optimize_production()
-print("Optimal production plan:")
-print(f"White production time: {result['white_minutes']} minutes")
-print(f"Black production time: {result['black_minutes']} minutes")
-print(f"Effective twinner running time: {result['twinner_minutes']} minutes")
-print(f"Twinner idle time: {result['waiting_minutes']} minutes")
-print(f"PVC waste percentage: {result['waste_percent']}%")
