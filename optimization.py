@@ -8,35 +8,30 @@ def production_scenario_table(
     color_change_waste=1000,
     max_waste_percent=10,
     pvc_per_meter=3
+    
 ):
     records = []
-
-    # Iterate from 10h down to 0.1h in 0.1h steps
-    for white_hours in [i * 0.1 for i in range(100, 0, -1)]:
-        for black_hours in [i * 0.1 for i in range(100, 0, -1)]:
-            white_minutes = int(white_hours * 60)
-            black_minutes = int(black_hours * 60)
+    for white_spool_count in [i  for i in range(5, 0, -1)]:
+        for black_spool_count in [i  for i in range(1, 0, -1)]:
+            white_minutes = int(((white_spool_count * spool_capacity)/extruder_rate)*60)
+            black_minutes = int(((black_spool_count * spool_capacity)/extruder_rate)*60)
             total_extruder_minutes = white_minutes + color_change_time + black_minutes
 
-            white_length = white_hours * extruder_rate
-            black_length = black_hours * extruder_rate
+            white_length = (white_minutes/60) * extruder_rate
+            black_length = (black_minutes/60) * extruder_rate
             usable_length = min(white_length, black_length)
-            twinner_minutes = int((usable_length / twinner_rate) * 60)
+            twinner_time = int(usable_length / twinner_rate)
 
-            color_changes = 1 if white_hours == 0 or black_hours == 0 else 2
-            total_waste = color_changes * color_change_waste
-            total_pvc = (white_length + black_length) * pvc_per_meter + total_waste
-            waste_percent = (total_waste / total_pvc) * 100
+            total_pvc = ((white_length + black_length) * pvc_per_meter) + color_change_waste
+            waste_percent = (color_change_waste / total_pvc) * 100
 
-            # Calculate twinner waiting time accurately
-            twinner_start = white_minutes + color_change_time + black_minutes
-            extruder_end = total_extruder_minutes
-            waiting_time = max(0, twinner_start - extruder_end)
+            # Calculate twinner waiting time accurately 
+            waiting_time = round((white_minutes + color_change_time + black_minutes)/60,2)
 
             records.append({
-                'White (min)': white_minutes,
-                'Black (min)': black_minutes,
-                'Twinner (min)': twinner_minutes,
+                'White spool count': white_spool_count,
+                'Black spool count': black_spool_count,
+                'Twinner working time ': twinner_time,
                 'Twinner Idle (min)': waiting_time,
                 'PVC Waste (%)': round(waste_percent, 2)
             })
